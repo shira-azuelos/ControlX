@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@layer utilities {
+  /* אנימציית סריקה הלוך-חזור */
+  @keyframes scanline {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(140px); }
+    100% { transform: translateY(0); }
+  }
+  .animate-scan {
+    animation: scanline 2.5s ease-in-out infinite;
+  }
+}
+
+body {
+  margin: 0;
+  overflow: hidden; /* מונע גלילה מיותרת */
+  background-color: #010806;
+}

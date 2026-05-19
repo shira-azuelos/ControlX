@@ -20,7 +20,7 @@ public class AgencyEmployeeController {
         this.employeeService = employeeService;
     }
 
-    // 1. לוגין
+    // 1. לוגין - מעודכן לזריקת שגיאה גלובלית
     @GetMapping("/login/{passkey}")
     public ResponseEntity<?> login(@PathVariable String passkey) {
         return employeeService.getAllEmployees().stream()
@@ -34,38 +34,49 @@ public class AgencyEmployeeController {
                     response.put("employeeType", employee instanceof entity.DeskManager ? "DeskManager" : "FieldAgent");
                     return ResponseEntity.ok(response);
                 })
-                .orElse(ResponseEntity.status(401).build());
+                // במקום 401 ידני, זורקים שגיאה שמגיעה ישר ל-GlobalExceptionHandler
+                .orElseThrow(() -> new IllegalArgumentException("קוד הגישה (Passkey) שהוזן אינו קיים במערכת."));
     }
 
-    // 2. גיוס סוכן חכם (זה הנתיב שהריאקט קורא לו עכשיו!)
+    // 2. גיוס סוכן חכם
     @PostMapping("/recruit")
     public AgencyEmployee recruitAgent(@RequestBody FieldAgent agent, @RequestParam Long managerId) {
         return employeeService.recruitNewAgent(agent, managerId);
     }
 
-    // 3. שליפת סוכנים לפי מחלקה (עבור ה-Overview והרשימות)
+    // 3. שליפת סוכנים לפי מחלקה - מעודכן לטיפול חכם ב-Enum שגוי
     @GetMapping("/department/{dept}")
     public List<FieldAgent> getAgentsByDepartment(@PathVariable String dept) {
-        AgencyEmployee.Department department = AgencyEmployee.Department.valueOf(dept);
-        return employeeService.getAllEmployees().stream()
-                .filter(e -> e instanceof FieldAgent)
-                .map(e -> (FieldAgent) e)
-                .filter(a -> a.getDepartment() == department)
-                .toList();
+        try {
+            // אם הטקסט ב-dept לא קיים ב-Enum, השורה הזו תזרוק שגיאה אוטומטית
+            AgencyEmployee.Department department = AgencyEmployee.Department.valueOf(dept.toUpperCase());
+
+            return employeeService.getAllEmployees().stream()
+                    .filter(e -> e instanceof FieldAgent)
+                    .map(e -> (FieldAgent) e)
+                    .filter(a -> a.getDepartment() == department)
+                    .toList();
+
+        } catch (IllegalArgumentException e) {
+            // אנחנו תופסים את השגיאה הטכנית ומעבירים אותה הלאה לגלובלי עם הסבר ברור בעברית
+            throw new IllegalArgumentException("המחלקה המבוקשת '" + dept + "' אינה קיימת במערכת.");
+        }
     }
 
+    // 4. מחיקת עובד
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok().build();
     }
-    // --- יצירת עובד רגיל (כמו מנהל) - השורה שהעלמתי בטעות! ---
+
+    // 5. יצירת עובד רגיל
     @PostMapping
     public AgencyEmployee create(@RequestBody AgencyEmployee employee) {
         return employeeService.saveEmployee(employee);
     }
 
-    // --- שליפת כל העובדים בארגון ---
+    // 6. שליפת כל העובדים בארגון
     @GetMapping
     public List<AgencyEmployee> getAll() {
         return employeeService.getAllEmployees();

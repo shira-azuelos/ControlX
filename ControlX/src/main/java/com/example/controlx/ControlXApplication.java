@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.example.controlx", "controller", "service", "repository","exception"})
+@ComponentScan(basePackages = {"com.example.controlx", "controller", "service", "repository","exception","config","security"})
 @EnableJpaRepositories(basePackages = "repository")
 @EntityScan(basePackages = "entity") //
 public class ControlXApplication {

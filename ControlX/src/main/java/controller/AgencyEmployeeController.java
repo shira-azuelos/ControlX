@@ -5,6 +5,8 @@ import entity.FieldAgent;
 import service.AgencyEmployeeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import service.JwtService;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,26 +17,33 @@ import java.util.Map;
 public class AgencyEmployeeController {
 
     private final AgencyEmployeeService employeeService;
+    private final JwtService jwtService;
 
-    public AgencyEmployeeController(AgencyEmployeeService employeeService) {
+    public AgencyEmployeeController(AgencyEmployeeService employeeService, JwtService jwtService) {
         this.employeeService = employeeService;
+        this.jwtService = jwtService;
     }
 
-    // 1. לוגין - מעודכן לזריקת שגיאה גלובלית
     @GetMapping("/login/{passkey}")
     public ResponseEntity<?> login(@PathVariable String passkey) {
         return employeeService.getAllEmployees().stream()
                 .filter(e -> e.getId().toString().equals(passkey))
                 .findFirst()
                 .map(employee -> {
+                    String employeeType = employee instanceof entity.DeskManager ? "DeskManager" : "FieldAgent";
+
+                    // יצירת הטוקן המאובטח על בסיס נתוני העובד
+                    String token = jwtService.generateToken(employee.getId(), employeeType, employee.getFullName());
+
                     Map<String, Object> response = new HashMap<>();
                     response.put("id", employee.getId());
                     response.put("name", employee.getFullName());
                     response.put("department", employee.getDepartment());
-                    response.put("employeeType", employee instanceof entity.DeskManager ? "DeskManager" : "FieldAgent");
+                    response.put("employeeType", employeeType);
+                    response.put("token", token); // שליחת כרטיס הכניסה לריאקט
+
                     return ResponseEntity.ok(response);
                 })
-                // במקום 401 ידני, זורקים שגיאה שמגיעה ישר ל-GlobalExceptionHandler
                 .orElseThrow(() -> new IllegalArgumentException("קוד הגישה (Passkey) שהוזן אינו קיים במערכת."));
     }
 

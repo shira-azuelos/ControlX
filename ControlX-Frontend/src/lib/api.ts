@@ -28,7 +28,10 @@ export const getMissionsByManager = async (managerId: number) => {
 // --- סוכנים ---
 export const getAgentsByDept = async (dept: string) => {
   const response = await fetch(`${BASE_URL}/employees/department/${dept}`);
-  if (!response.ok) throw new Error("Failed to fetch agents by department");
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})); 
+    throw new Error(errorData.error || 'Failed to recruit agent');
+  }
   return response.json();
 };
 

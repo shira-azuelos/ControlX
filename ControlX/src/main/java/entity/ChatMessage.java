@@ -29,4 +29,8 @@ public class ChatMessage {
     @ManyToOne
     @JoinColumn(name = "sender_id")
     private AgencyEmployee sender;
+
+    @ManyToOne
+    @JoinColumn(name = "recipient_id")
+    private AgencyEmployee recipient; // הנמען (זה שיקבל את ההודעה)
 }

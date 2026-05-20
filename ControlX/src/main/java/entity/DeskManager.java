@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @DiscriminatorValue("MANAGER") // מזהה של מנהל
 @Data
 @EqualsAndHashCode(callSuper = true)
+
 public class DeskManager extends AgencyEmployee {
 
     private int yearsOfExperience;//ותק

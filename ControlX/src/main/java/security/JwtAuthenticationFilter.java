@@ -39,16 +39,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        jwt = authHeader.substring(7); // מורידים את המילה "Bearer " כדי להישאר רק עם הטוקן
+        jwt = authHeader.substring(7); // בידוד הטוקן
 
         try {
-            employeeId = jwtService.extractEmployeeId(jwt);
+            employeeId = jwtService.extractEmployeeId(jwt);//שליפת ID של המשתמש
 
-            // אם מצאנו ID והמשתמש עדיין לא מאומת בקונטקסט הנוכחי
+            // אם מצאנו ID והמשתמש עדיין לא מאומת בבקשה הנוכחית
             if (employeeId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
                 if (jwtService.isTokenValid(jwt)) {
-                    String role = jwtService.extractRole(jwt); // למשל "DeskManager" או "FieldAgent"
+                    String role = jwtService.extractRole(jwt); // חילוץ התפקיד
 
                     // יוצרים אובייקט אימות עבור Spring Security
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -57,14 +56,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                     );
 
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));//מעתיקים לתעודה עוד פרטים מהבקשה
 
                     // מעדכנים את מערכת האבטחה שהמשתמש מורשה לפעולה הזו
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            // אם הטוקן פג תוקף או מזויף - לא מאמתים את הבקשה
             System.out.println("JWT verification failed: " + e.getMessage());
         }
 

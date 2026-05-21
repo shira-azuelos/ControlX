@@ -15,14 +15,12 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // מפתח הצפנה סודי (במציאות שומרים אותו בקובץ properties)
-    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);//מייצר מפתח הצפנה
 
     // תוקף הטוקן: 24 שעות
     private static final long JWT_EXPIRATION = 1000 * 60 * 60 * 24;
 
-    // 1. יצירת טוקן על פי ה-ID והתפקיד של העובד
-    public String generateToken(Long employeeId, String role, String fullName) {
+    public String generateToken(Long employeeId, String role, String fullName) {  // יצירת טוקן
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
         claims.put("fullName", fullName);
@@ -36,18 +34,15 @@ public class JwtService {
                 .compact();
     }
 
-    // 2. חילוץ ה-ID של המשתמש מתוך הטוקן
-    public Long extractEmployeeId(String token) {
+    public Long extractEmployeeId(String token) { //חילוץ הID של העובד
         return Long.parseLong(extractClaim(token, Claims::getSubject));
     }
 
-    // 3. חילוץ תפקיד המשתמש מתוך הטוקן
-    public String extractRole(String token) {
+    public String extractRole(String token) { //חילוץ תפקיד העובד
         return extractAllClaims(token).get("role", String.class);
     }
 
-    // 4. בדיקה האם הטוקן בתוקף ולא פג
-    public boolean isTokenValid(String token) {
+    public boolean isTokenValid(String token) {//בדיקת תוקף הטוקן
         return !isTokenExpired(token);
     }
 
@@ -55,12 +50,12 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {//מחזירה את המידע המבוקש מהטוקן
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) { //פיענוח הטוקן
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()

@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity//חוקי האבטחה לפי הכתוב בדף
 @EnableMethodSecurity
 public class SecurityConfig {
 
@@ -29,16 +29,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. הגדרת CORS בצורה החדשה
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // 2. כיבוי CSRF בצורה החדשה
                 .csrf(csrf -> csrf.disable())
-
-                // 3. הגדרת Session כ-STATELESS (ללא מצב, רק טוקנים)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // 4. הגדרת חוקי הגישה לנתיבים
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//בכל בקשה יצטרכו לשלוח טוקן
+                // הגדרת חוקי הגישה לנתיבים
                 .authorizeHttpRequests(auth -> auth
                         // דף הלוגין וחיבור ה-WebSocket פתוחים לחלוטין לכולם
                         .requestMatchers("/api/employees/login/**", "/ws-chat/**").permitAll()
@@ -55,13 +49,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("*"));//קבלת בקשות
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true);//אפשר להעביר מידע מסווג בין השרת לללקוח
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);//החוקים חלים על כל הנתיבים
         return source;
     }
 }

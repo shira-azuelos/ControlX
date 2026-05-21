@@ -31,16 +31,13 @@ public class AgencyEmployeeController {
                 .findFirst()
                 .map(employee -> {
                     String employeeType = employee instanceof entity.DeskManager ? "DeskManager" : "FieldAgent";
-
-                    // יצירת הטוקן המאובטח על בסיס נתוני העובד
-                    String token = jwtService.generateToken(employee.getId(), employeeType, employee.getFullName());
-
+                    String token = jwtService.generateToken(employee.getId(), employeeType, employee.getFullName());//יצירת טוקן
                     Map<String, Object> response = new HashMap<>();
                     response.put("id", employee.getId());
                     response.put("name", employee.getFullName());
                     response.put("department", employee.getDepartment());
                     response.put("employeeType", employeeType);
-                    response.put("token", token); // שליחת כרטיס הכניסה לריאקט
+                    response.put("token", token);
 
                     return ResponseEntity.ok(response);
                 })

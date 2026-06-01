@@ -1,7 +1,7 @@
 const BASE_URL = "http://localhost:8080/api";
 
 
-const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
+export const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
   const userStr = localStorage.getItem('user');
   let token = '';
   if (userStr) {

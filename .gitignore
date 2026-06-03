@@ -33,3 +33,9 @@ logs/
 # OS Metadata - קבצי מערכת של ווינדוס או מאק
 Thumbs.db
 .DS_Store
+
+# Databases - מסדי נתונים מקומיים
+*.db
+*.mv.db
+*.trace.db
+data/

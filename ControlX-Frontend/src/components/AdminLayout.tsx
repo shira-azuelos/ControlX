@@ -1,18 +1,18 @@
 import React from 'react';
-import { LayoutDashboard, Users, FileText, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, LogOut, Shield, MessageSquare } from 'lucide-react'; // הוספנו את MessageSquare
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // נשתמש בזה כדי לזהות באיזה דף אנחנו (לצביעת התפריט)
+  const location = useLocation();
 
-  // שולפים את פרטי המנהל מהזיכרון (כמו שעשינו בסוכן)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'OVERVIEW', path: '/admin' },
     { icon: <Users size={20} />, label: 'AGENTS', path: '/admin/personnel' },
     { icon: <FileText size={20} />, label: 'MISSIONS', path: '/admin/missions' },
+    { icon: <MessageSquare size={20} />, label: 'CHAT', path: '/admin/comms' },
   ];
 
   return (
@@ -33,8 +33,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-4 p-3 rounded transition-all ${
                 location.pathname === item.path
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' // צבע מודגש לעמוד הנוכחי
-                  : 'hover:bg-emerald-500/10 text-emerald-700 hover:text-emerald-500' // צבע רגיל לשאר
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                  : 'hover:bg-emerald-500/10 text-emerald-700 hover:text-emerald-500'
               }`}
             >
               {item.icon}
@@ -46,7 +46,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         {/* כפתור התנתקות */}
         <button 
           onClick={() => {
-            localStorage.removeItem('user'); // מנקים את הזיכרון!
+            localStorage.removeItem('user');
             navigate('/');
           }} 
           className="flex items-center justify-center gap-3 p-4 text-red-900 hover:text-red-500 hover:bg-red-900/10 border-t border-emerald-900/10 transition-all font-bold text-xs tracking-widest"
@@ -59,14 +59,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       {/* --- אזור התוכן המרכזי --- */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         
-        {/* === הסרגל העליון החדש שהוספנו (Header) === */}
+        {/* === הסרגל העליון (Header) === */}
         <header className="h-16 border-b border-emerald-900/30 bg-[#020a08]/80 backdrop-blur-md flex justify-between items-center px-8 shrink-0 z-40">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] text-emerald-800 tracking-widest font-bold">SECURE_CONNECTION_ESTABLISHED</span>
           </div>
 
-          {/* פרופיל המנהל בראש העמוד */}
           <div className="flex items-center gap-4 bg-emerald-950/30 px-5 py-1.5 rounded-full border border-emerald-900/50 hover:bg-emerald-900/20 transition-colors cursor-default">
             <div className="text-right">
               <div className="text-[9px] text-emerald-700 uppercase font-bold tracking-widest">
@@ -82,7 +81,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </header>
 
-        {/* --- התוכן המשתנה של הדף (AdminAgents / AdminDashboard) --- */}
+        {/* --- התוכן המשתנה של הדף --- */}
         <main className="flex-1 overflow-auto p-8 relative">
           {children}
         </main>

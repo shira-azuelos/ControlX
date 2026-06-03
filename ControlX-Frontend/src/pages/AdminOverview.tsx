@@ -137,7 +137,7 @@ const AdminOverview = () => {
           <section className="bg-[#031a14]/60 border border-emerald-700/40 rounded p-4 md:p-6">
             <h3 className="text-xs font-black mb-3 border-b border-emerald-800/40 pb-2 text-emerald-200 flex items-center gap-2 tracking-[0.15em] uppercase">
               <BellRing size={14} />
-              Latest Reports (10)
+              Latest Reports 
             </h3>
 
             <div className="space-y-3 max-h-72 overflow-auto pr-1 custom-scrollbar">

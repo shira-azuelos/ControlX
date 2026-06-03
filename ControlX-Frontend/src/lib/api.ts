@@ -125,3 +125,4 @@ export const submitReport = async (missionId: number, agentId: number, text: str
   if (!response.ok) throw new Error("Failed to submit report");
   return response.json();
 };
+

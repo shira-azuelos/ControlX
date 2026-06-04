@@ -54,12 +54,13 @@ public class ChatMessageController {
 
         // א. שומרים את ההודעה בדאטה-בייס בשיטה הפרטית המעולה שלך
         ChatMessage savedMessage = chatMessageService.saveMessage(mission, sender, recipient, request.text);
-
-        // ב. הקסם קורה פה! משדרים את ההודעה ישירות לערוץ של הנמען
-        // הכתובת תהיה למשל: /topic/messages/mission/5/user/10
+        // ב.  משדרים את ההודעה ישירות לערוץ של הנמען
         String destination = "/topic/messages/mission/" + request.missionId + "/user/" + request.recipientId;
         messagingTemplate.convertAndSend(destination, savedMessage);
 
+        // התוספת החדשה: משדרים גם לערוץ התראות גלובלי של הנמען!
+        String globalDestination = "/topic/notifications/user/" + request.recipientId;
+        messagingTemplate.convertAndSend(globalDestination, savedMessage);
         return ResponseEntity.ok(savedMessage);
     }
 

@@ -5,7 +5,11 @@ import entity.Report;
 import service.MissionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate; // הוספנו ייבוא
+
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/missions")
@@ -13,9 +17,13 @@ import java.util.List;
 public class MissionController {
 
     private final MissionService missionService;
+    // הרכיב שמאפשר לנו לדחוף הודעות בזמן אמת
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public MissionController(MissionService missionService) {
+    // עדכנו את הבנאי (Constructor) שיקבל גם את רכיב השידור
+    public MissionController(MissionService missionService, SimpMessagingTemplate messagingTemplate) {
         this.missionService = missionService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // 1. שליפת כל המשימות
@@ -27,9 +35,7 @@ public class MissionController {
     // 2. מסנן משימות לפי מנהל - מוגן מפני מזהה שגוי
     @GetMapping("/manager/{managerId}")
     public List<Mission> getMissionsByManager(@PathVariable Long managerId) {
-        List<Mission> m = missionService.getMissionsByManager(managerId);
-        // אם החזרת רשימה ריקה והמנהל לא קיים, תוכלי להוסיף פה בדיקה, אך לרוב החזרת רשימה ריקה היא תקינה.
-        return m;
+        return missionService.getMissionsByManager(managerId);
     }
 
     // 3. יצירת משימה חדשה
@@ -41,16 +47,44 @@ public class MissionController {
         return missionService.saveMission(mission);
     }
 
-    // 4. הגשת דיווח למשימה - מוגן מפני קלטים חסרים או מזהים שגויים
+    // 4. הגשת דיווח למשימה + שידור ההתראה בזמן אמת למנהל!
     @PostMapping("/{missionId}/report")
     public Report submitReport(@PathVariable Long missionId, @RequestParam Long agentId, @RequestParam String text) {
         if (text == null || text.trim().isEmpty()) {
             throw new IllegalArgumentException("תוכן הדיווח אינו יכול להיות ריק.");
         }
         try {
-            return missionService.addReport(missionId, agentId, text);
+            // שמירת הדיווח במסד הנתונים
+            Report savedReport = missionService.addReport(missionId, agentId, text);
+
+            // ==========================================
+            // חדש: יצירת ההתראה ושליחתה למנהל!
+            // ==========================================
+            try {
+                // מזהים מי המנהל שיצר את המשימה כדי לשלוח אליו את ההתראה
+                Long managerId = savedReport.getMission().getCreatorManager().getId();
+
+                // בונים אובייקט "דמה" שייראה כמו הודעת צ'אט כדי שהריאקט ידע לקרוא אותו
+                Map<String, Object> notification = new HashMap<>();
+                notification.put("senderId", agentId);
+
+                Map<String, Object> senderInfo = new HashMap<>();
+                // שולפים את שם הסוכן מהדיווח
+                senderInfo.put("codename", savedReport.getAuthor().getCodename());
+                notification.put("sender", senderInfo);
+
+                // מוסיפים קידומת [FIELD REPORT] כדי שהמנהל ידע שזה דיווח ולא צ'אט רגיל
+                notification.put("text", "[FIELD REPORT] " + text);
+
+                // משדרים לערוץ ההתראות של המנהל
+                messagingTemplate.convertAndSend("/topic/notifications/user/" + managerId, notification);
+            } catch (Exception ex) {
+                System.out.println("WebSocket Report Notification Failed: " + ex.getMessage());
+            }
+            // ==========================================
+
+            return savedReport;
         } catch (Exception e) {
-            // אם המשימה או הסוכן לא קיימים בבסיס הנתונים, ה-Service יזרוק שגיאה, ואנחנו נעביר אותה לגלובלי עם הסבר
             throw new IllegalArgumentException("נכשל בהגשת הדיווח. ודא כי מזהה המשימה (" + missionId + ") ומזהה הסוכן (" + agentId + ") קיימים במערכת.");
         }
     }

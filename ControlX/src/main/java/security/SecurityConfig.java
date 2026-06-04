@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity//חוקי האבטחה לפי הכתוב בדף
+@EnableWebSecurity //חוקי האבטחה לפי הכתוב בדף
 @EnableMethodSecurity
 public class SecurityConfig {
 
@@ -35,6 +35,7 @@ public class SecurityConfig {
                 // הגדרת חוקי הגישה לנתיבים
                 .authorizeHttpRequests(auth -> auth
                         // דף הלוגין וחיבור ה-WebSocket פתוחים לחלוטין לכולם
+                        // התיקון כאן: שינינו ל- ws-chat כדי שיתאים לכתובת האמיתית!
                         .requestMatchers("/api/employees/login/**", "/ws-chat/**").permitAll()
                         // כל שאר הבקשות במערכת מחייבות טוקן תקף
                         .anyRequest().authenticated()
@@ -52,7 +53,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("*"));//קבלת בקשות
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
-        configuration.setAllowCredentials(true);//אפשר להעביר מידע מסווג בין השרת לללקוח
+        configuration.setAllowCredentials(true);//אפשר להעביר מידע מסווג בין השרת ללקוח
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);//החוקים חלים על כל הנתיבים

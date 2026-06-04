@@ -1,10 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Shield, Wifi, Radio, Target } from "lucide-react";
+import { LogOut, Shield, Wifi, Target } from "lucide-react";
 
 const AgentLayout = ({
   children,
-  agentName,
 }: {
   children: React.ReactNode;
   agentName: string;

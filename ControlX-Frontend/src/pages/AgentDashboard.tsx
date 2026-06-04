@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import AgentLayout from '../components/AgentLayout';
-import { Activity, AlertCircle, MapPin, Clock, Zap, ShieldAlert, Target, Send, FileText,Wifi } from 'lucide-react';
+import { Activity, AlertCircle, Zap, ShieldAlert, Target, FileText } from 'lucide-react';
 import { getMissions, submitReport } from '../lib/api';
 import { ChatWindow } from '../components/ChatWindow'; 
+import toast, { Toaster } from 'react-hot-toast'; 
 
 const AgentDashboard = () => {
   const [activeMission, setActiveMission] = useState<any>(null);
@@ -38,31 +39,73 @@ const AgentDashboard = () => {
     e.preventDefault();
     if (!newReport.trim() || !activeMission) return;
 
+    // ==========================================
+    // התיקון: החלפנו את ה-alert בהתראות טקטיות
+    // ==========================================
     try {
       await submitReport(activeMission.id, user.id, newReport);
       setNewReport('');
-      alert("Report transmitted successfully.");
+      
+      // התראת הצלחה ירוקה ומעוצבת
+      toast.success('REPORT TRANSMITTED SUCCESSFULLY', {
+        style: { 
+          background: '#02120e', 
+          color: '#34d399', 
+          border: '1px solid #059669', 
+          fontFamily: 'monospace',
+          fontSize: '10px',
+          letterSpacing: '0.1em'
+        },
+        iconTheme: { primary: '#10b981', secondary: '#02120e' }
+      });
+
     } catch (err) {
-      alert("Comms Failure: Report not transmitted.");
+      // התראת שגיאה אדומה
+      toast.error('COMMS FAILURE: REPORT NOT TRANSMITTED', {
+        style: { 
+          background: '#2a0808', 
+          color: '#f87171', 
+          border: '1px solid #991b1b', 
+          fontFamily: 'monospace',
+          fontSize: '10px',
+          letterSpacing: '0.1em'
+        },
+        iconTheme: { primary: '#ef4444', secondary: '#2a0808' }
+      });
     }
+    // ==========================================
   };
 
   return (
     <AgentLayout agentName={user.codename || user.fullName}>
+      {/* הוספנו את הרכיב שמצייר את ההתראות על המסך */}
+      <Toaster position="top-center" />
+
       <div className="p-8 h-full flex flex-col font-mono text-xs uppercase tracking-widest relative bg-[#020504]">
         
         {/* --- TOP HUD --- */}
-<div className="flex justify-between items-center mb-6 bg-[#0a0f0d] border border-emerald-900/50 p-4 shadow-[0_0_20px_rgba(16,185,129,0.05)]">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-emerald-500 font-bold">
-              <Activity size={16} /> <span>AGENT_ACTIVE</span>
+        <div className="flex justify-between items-center mb-8 bg-black/80 border-b-2 border-emerald-900/50 pb-4 shadow-lg shrink-0">
+          <div className="flex gap-10">
+            <div className="flex flex-col">
+              <span className="text-[9px] text-emerald-800 font-black mb-1">AGENT_VITALS</span>
+              <div className="flex items-center gap-2">
+                <Activity size={14} className="text-emerald-400 animate-pulse" />
+                <div className="w-24 h-1.5 bg-emerald-900/30 rounded-full overflow-hidden">
+                  <div className="w-[85%] h-full bg-emerald-500" />
+                </div>
+              </div>
             </div>
-            <div className="h-4 w-[1px] bg-emerald-900" />
-            <div className="text-emerald-700">STATUS: <span className="text-emerald-300">SECURE_LINK</span></div>
+            <div className="flex flex-col border-l border-emerald-900/30 pl-10">
+              <span className="text-[9px] text-emerald-800 font-black mb-1">ENCRYPTION_KEY</span>
+              <span className="text-emerald-200 font-black">SECURE-UPLINK-V2</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-amber-500 font-black">
-             <span>SYSTEM: ONLINE</span>
-             <Wifi size={16} />
+          <div className="flex items-center gap-4">
+             <div className="text-right">
+                <span className="text-[9px] text-amber-800 font-black">SYSTEM_STATUS</span>
+                <div className="text-amber-500 font-black text-sm">ONLINE & READY</div>
+             </div>
+             <Zap size={20} className="text-amber-500 animate-bounce" />
           </div>
         </div>
 
@@ -95,7 +138,7 @@ const AgentDashboard = () => {
             )}
           </div>
 
-          {/* RIGHT: CHAT & REPORTS (Tabs style) */}
+          {/* RIGHT: CHAT & REPORTS */}
           <div className="w-[450px] flex flex-col gap-4">
             
             {/* CHAT WINDOW */}
@@ -120,7 +163,7 @@ const AgentDashboard = () => {
                <textarea 
                   value={newReport}
                   onChange={(e) => setNewReport(e.target.value)}
-                  className="w-full h-24 bg-black border border-amber-900/30 p-3 text-xs text-amber-500 outline-none focus:border-amber-500 resize-none font-bold mb-2"
+                  className="w-full h-24 bg-black border border-amber-900/30 p-3 text-xs text-amber-500 outline-none focus:border-amber-500 resize-none font-bold mb-2 custom-scrollbar"
                   placeholder="Enter observation details..."
                />
                <button type="submit" className="w-full bg-amber-600 text-black py-2 font-black text-xs hover:bg-amber-500 transition-all">

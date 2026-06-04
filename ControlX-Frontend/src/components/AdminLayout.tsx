@@ -1,12 +1,77 @@
-import React from 'react';
-import { LayoutDashboard, Users, FileText, LogOut, Shield, MessageSquare } from 'lucide-react'; // הוספנו את MessageSquare
+import React, { useEffect } from 'react';
+import { LayoutDashboard, Users, FileText, LogOut, Shield, MessageSquare, BellRing } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client'; // <--- הוספנו את זה!
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  useEffect(() => {
+    if (!user || !user.id) return;
+
+    const stompClient = new Client({
+      // כאן הקסם: אנחנו משתמשים ב-SockJS ובכתובת המקורית שלך!
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        console.log('Global Admin Listener Connected');
+        
+        stompClient.subscribe(`/topic/notifications/user/${user.id}`, (message) => {
+          const receivedMessage = JSON.parse(message.body);
+          
+          const senderId = receivedMessage.sender?.id || receivedMessage.senderId;
+          const senderName = receivedMessage.sender?.codename || receivedMessage.sender?.fullName || 'UNKNOWN ASSET';
+          const textContent = receivedMessage.text || receivedMessage.content || 'Encrypted Payload';
+          
+          if (senderId !== user.id && senderName !== 'SYSTEM') {
+            showTacticalToast({ senderName, textContent });
+          }
+        });
+      },
+      onStompError: (frame) => {
+        console.error('Broker reported error: ' + frame.headers['message']);
+      },
+    });
+
+    stompClient.activate();
+
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [user.id]);
+
+  const showTacticalToast = (msg: { senderName: string; textContent: string }) => {
+    toast.custom((t) => (
+      <div
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } max-w-md w-full bg-[#02120e] border border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] rounded pointer-events-auto flex flex-col font-mono uppercase tracking-widest text-xs z-50`}
+      >
+        <div className="bg-emerald-900/40 px-4 py-2 border-b border-emerald-900/50 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-emerald-400 font-black">
+            <BellRing size={14} className="animate-pulse" />
+            <span>INCOMING TRANSMISSION</span>
+          </div>
+          <span className="text-[9px] text-emerald-600">
+            {new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+        <div className="p-4">
+          <p className="text-[10px] text-emerald-600 font-bold mb-1">
+            SENDER: <span className="text-emerald-300">{msg.senderName}</span>
+          </p>
+          <p className="text-emerald-100 font-medium leading-relaxed truncate">
+            {msg.textContent}
+          </p>
+        </div>
+      </div>
+    ), { duration: 5000, position: 'top-right' });
+  };
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'OVERVIEW', path: '/admin' },
@@ -17,8 +82,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-[#010806] flex text-emerald-500 font-mono">
-      
-      {/* --- תפריט צד (Sidebar) --- */}
+      <Toaster />
+
       <div className="w-64 border-r border-emerald-900/30 bg-[#02120e]/50 flex flex-col z-50">
         <div className="p-6 border-b border-emerald-900/20 text-center bg-black/20">
           <Shield className="mx-auto mb-2 text-emerald-400" size={32} />
@@ -43,7 +108,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           ))}
         </nav>
 
-        {/* כפתור התנתקות */}
         <button 
           onClick={() => {
             localStorage.removeItem('user');
@@ -56,10 +120,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </button>
       </div>
 
-      {/* --- אזור התוכן המרכזי --- */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        
-        {/* === הסרגל העליון (Header) === */}
         <header className="h-16 border-b border-emerald-900/30 bg-[#020a08]/80 backdrop-blur-md flex justify-between items-center px-8 shrink-0 z-40">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -81,7 +142,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </header>
 
-        {/* --- התוכן המשתנה של הדף --- */}
         <main className="flex-1 overflow-auto p-8 relative">
           {children}
         </main>

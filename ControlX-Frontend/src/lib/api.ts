@@ -126,3 +126,16 @@ export const submitReport = async (missionId: number, agentId: number, text: str
   return response.json();
 };
 
+// --- ניהול קריאת הודעות בצ'אט ---
+
+export const getUnreadCount = async (missionId: number, senderId: number, myId: number) => {
+  const response = await fetchWithAuth(`/chat/mission/${missionId}/unread?senderId=${senderId}&myId=${myId}`);
+  if (!response.ok) throw new Error("Failed to get unread count");
+  return response.json();
+};
+
+export const markMessagesAsRead = async (missionId: number, senderId: number, myId: number) => {
+  const response = await fetchWithAuth(`/chat/mission/${missionId}/read?senderId=${senderId}&myId=${myId}`, { method: 'POST' });
+  if (!response.ok) throw new Error("Failed to mark messages as read");
+  return response;
+};

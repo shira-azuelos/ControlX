@@ -1,10 +1,72 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import { Send, Users, MessageSquare, X, Globe2, ShieldAlert } from 'lucide-react';
-// מושכים גם את המשימות כדי שנוכל למצוא את המשימה של הסוכן כשאנחנו בראשי
-import { getAgentsByDept, getMissionsByManager } from '../lib/api'; 
+import { Send, Globe2, ShieldAlert, X, MessageSquare } from 'lucide-react';
+import { getAgentsByDept, getMissionsByManager, getUnreadCount } from '../lib/api'; 
 import { ChatWindow } from '../components/ChatWindow';
+
+// === קומפוננטה חדשה: כפתור סוכן עם בועה אדומה מובנית! ===
+const AgentContactButton = ({ agent, fromMission, allMissions, selectedAgent, isGroupChat, onSelect, managerId }: any) => {
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        let activeMissionId = fromMission?.id;
+        if (!activeMissionId) {
+          const m = allMissions.find((m: any) => 
+            (m.status === 'IN_PROGRESS' || m.status === 'PENDING') &&
+            m.assignedAgents?.some((a: any) => a.id === agent.id)
+          );
+          activeMissionId = m?.id;
+        }
+
+        if (activeMissionId && managerId) {
+          const count = await getUnreadCount(activeMissionId, agent.id, managerId);
+          setUnread(count);
+        }
+      } catch (e) { console.error("Failed to fetch unread count"); }
+    };
+
+    // אנחנו בודקים הודעות חדשות רק אם הסוכן *לא* פתוח כרגע בחלון הצ'אט
+    if (selectedAgent?.id !== agent.id) {
+        fetchUnread();
+        // דוגם את השרת כל 5 שניות לראות אם יש הודעות חדשות
+        const interval = setInterval(fetchUnread, 5000);
+        return () => clearInterval(interval);
+    } else {
+        setUnread(0); // אם הצ'אט פתוח, נאפס את הבועה מיד
+    }
+  }, [agent.id, fromMission, allMissions, managerId, selectedAgent]);
+
+  return (
+    <button
+      onClick={() => onSelect(agent)}
+      className={`w-full p-3 rounded-lg border-2 transition-all text-left mb-2 ${
+        selectedAgent?.id === agent.id && !isGroupChat
+          ? 'bg-emerald-600/50 border-emerald-300 shadow-[0_0_10px_#34d399]'
+          : 'bg-emerald-900/40 border-emerald-700/40 hover:border-emerald-500/60'
+      }`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${agent.status === 'ON_MISSION' ? 'bg-emerald-400 animate-pulse' : 'bg-yellow-400'}`} />
+          <span className="text-xs font-bold text-emerald-200 uppercase truncate">{agent.codename}</span>
+        </div>
+        
+        {/* הבועה האדומה!! תופיע רק אם יש יותר מ-0 הודעות */}
+        {unread > 0 && selectedAgent?.id !== agent.id && (
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(220,38,38,0.8)] animate-pulse">
+            {unread > 9 ? '9+' : unread}
+          </span>
+        )}
+      </div>
+      <div className="text-xs text-emerald-600 font-mono truncate">{agent.specialty}</div>
+    </button>
+  );
+};
+// =======================================================
+
 
 const AdminMessages = () => {
   const location = useLocation();
@@ -15,7 +77,7 @@ const AdminMessages = () => {
   const [loading, setLoading] = useState(true);
   
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
-  const [agentActiveMission, setAgentActiveMission] = useState<any>(null); // שומר את המשימה של הסוכן הספציפי
+  const [agentActiveMission, setAgentActiveMission] = useState<any>(null);
 
   const [isGroupChat, setIsGroupChat] = useState<boolean>(false);
   const [groupMessages, setGroupMessages] = useState<any[]>([]);
@@ -53,12 +115,10 @@ const AdminMessages = () => {
     if (managerId) loadData();
   }, [managerDept, managerId, fromMission]);
 
-  // הפונקציה הזו רצה כשאת בוחרת סוכן (מהראשי או מהמשימה)
   const selectAgent = (agent: any) => {
     setIsGroupChat(false);
     setSelectedAgent(agent);
 
-    // אם הגענו מהראשי (בלי משימה), אנחנו מחפשים מה המשימה הפעילה של הסוכן כרגע!
     if (!fromMission) {
       const activeMission = allMissions.find((m: any) => 
         (m.status === 'IN_PROGRESS' || m.status === 'PENDING') &&
@@ -147,21 +207,16 @@ const AdminMessages = () => {
                   )}
 
                   {agents.map(agent => (
-                    <button
+                    <AgentContactButton
                       key={agent.id}
-                      onClick={() => selectAgent(agent)}
-                      className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                        selectedAgent?.id === agent.id && !isGroupChat
-                          ? 'bg-emerald-600/50 border-emerald-300 shadow-[0_0_10px_#34d399]'
-                          : 'bg-emerald-900/40 border-emerald-700/40 hover:border-emerald-500/60'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={`w-2 h-2 rounded-full ${agent.status === 'ON_MISSION' ? 'bg-emerald-400 animate-pulse' : 'bg-yellow-400'}`} />
-                        <span className="text-xs font-bold text-emerald-200 uppercase truncate">{agent.codename}</span>
-                      </div>
-                      <div className="text-xs text-emerald-600 font-mono truncate">{agent.specialty}</div>
-                    </button>
+                      agent={agent}
+                      fromMission={fromMission}
+                      allMissions={allMissions}
+                      selectedAgent={selectedAgent}
+                      isGroupChat={isGroupChat}
+                      onSelect={selectAgent}
+                      managerId={managerId}
+                    />
                   ))}
                 </>
               )}
@@ -191,7 +246,6 @@ const AdminMessages = () => {
                 </div>
                 
                 <div className="flex-1 overflow-hidden relative flex flex-col">
-                  {/* אם יש משימה (מהכפתור) או שלסוכן יש משימה פעילה (מהראשי) -> נציג את הצ'אט האמיתי! */}
                   {fromMission ? (
                     <ChatWindow 
                       currentUser={manager} 
@@ -205,7 +259,6 @@ const AdminMessages = () => {
                       selectedAgentId={selectedAgent.id} 
                     />
                   ) : (
-                    // אם הגענו מהראשי ולסוכן **אין** משימה פעילה -> השרת יקרוס, לכן נציג לו מסך שגיאה טקטי!
                     <div className="flex-1 bg-[#010806] flex flex-col items-center justify-center p-6 text-center text-emerald-900/50 h-full">
                       <ShieldAlert size={60} className="mb-4 opacity-50" />
                       <span className="font-black uppercase tracking-[0.2em] text-lg">SECURE UPLINK OFFLINE</span>

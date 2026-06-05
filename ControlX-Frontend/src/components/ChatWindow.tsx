@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
-import { fetchWithAuth } from '../lib/api';
+import { fetchWithAuth, markMessagesAsRead } from '../lib/api';
 
 interface Message {
   id?: number;
@@ -47,6 +47,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, selectedAge
         if (response.ok) {
            const data = await response.json();
            setMessages(data);
+
+           // הוספנו: מסמנים את כל ההודעות כ"נקראו" ברגע שפתחנו את חלון הצ'אט!
+           await markMessagesAsRead(missionId, selectedAgentId, currentUser.id);
         }
       } catch (error) {
         console.error("Failed to load chat history", error);

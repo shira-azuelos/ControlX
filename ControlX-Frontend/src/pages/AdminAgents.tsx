@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
-import { UserPlus, UserMinus, Activity, X, Shield, Users, Lock, ChevronLeft, AlertTriangle, Terminal, CheckCircle2 } from 'lucide-react';
+import { UserPlus, UserMinus, Activity, X, Shield, Users, Lock, ChevronLeft, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { getAgentsByDept, createAgent, deleteAgent } from '../lib/api';
 
-// --- הגדרות המילון: התמחויות לפי מחלקה ---
 const SPECIALTY_MAP: Record<string, { value: string, label: string }[]> = {
   'CYBER': [
     { value: 'HACKING', label: 'Hacking' },
@@ -29,12 +28,10 @@ const SPECIALTY_MAP: Record<string, { value: string, label: string }[]> = {
 
 const AdminAgents = () => {
   const [agents, setAgents] = useState<any[]>([]);
-  const [showAllAgents, setShowAllAgents] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // --- ניהול מודל מחיקה ---
-  const [agentToDelete, setAgentToDelete] = useState<{ id: number; codename: string } | null>(null);
+  const [showAllAgents, setShowAllAgents] = useState(false); //פתיחת רשימת הסוכנים
+  const [showModal, setShowModal] = useState(false);  //הוספת סוכן
+  const [loading, setLoading] = useState(true); //האם מחכים לשרת
+  const [agentToDelete, setAgentToDelete] = useState<{ id: number; codename: string } | null>(null); //מחיקת סוכן
 
   const manager = JSON.parse(localStorage.getItem('user') || '{}');
   const managerDept = manager.department || 'OPERATIONS';
@@ -103,7 +100,6 @@ const AdminAgents = () => {
         </div>
 
         {/* --- הלוח המרכזי: סוכנים פעילים --- */}
-        {/* הוספתי כאן mr-16 כדי לדחוף את הגלגלת שמאלה ולהרחיק אותה מהכפתור הצדדי */}
         <div className="flex-1 overflow-auto pr-4 pl-6 mr-16 relative z-10 custom-scrollbar">
           <div className="flex items-center gap-4 mb-8">
              <Activity className="text-emerald-400 animate-pulse" size={24} />
@@ -246,8 +242,7 @@ const AddAgentModal = ({ managerDept, onClose, onAdd }: any) => {
   const availableSpecialties = SPECIALTY_MAP[managerDept] || SPECIALTY_MAP['OPERATIONS'];
   const manager = JSON.parse(localStorage.getItem('user') || '{}');
   
-  // מצב חדש לניהול שלבי הגיוס
-  const [status, setStatus] = useState<'idle' | 'scanning' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'scanning' | 'success'>('idle'); //תהליך ההוספה
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -260,12 +255,8 @@ const AddAgentModal = ({ managerDept, onClose, onAdd }: any) => {
   const handleSubmit = (e: any) => {
     e.preventDefault();
     setStatus('scanning');
-    
-    // אנימציית טרמינל
-    setTimeout(() => {
-        setStatus('success'); // מראה את ה"אוקיי"
-        
-        // השהייה לפני סגירת המודל וסיום הפעולה
+      setTimeout(() => {
+        setStatus('success');         
         setTimeout(() => {
             onAdd(formData);
         }, 1500);

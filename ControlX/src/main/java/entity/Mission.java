@@ -31,7 +31,7 @@ public class Mission {
     @Enumerated(EnumType.STRING)
     private MissionStatus status= MissionStatus.PENDING;
 
-    // כאן ה-AI ישמור את הסיכום המאוחד מכל הדיווחים של כל הסוכנים
+    //  הסיכום המאוחד מכל הדיווחים של כל הסוכנים מ-AI
     @Column(columnDefinition = "TEXT")
     private String aiIntelligenceSummary;
 
@@ -47,8 +47,9 @@ public class Mission {
     )
     private List<FieldAgent> assignedAgents = new ArrayList<>();
 
-    // הקשר לכל הדיווחים הגולמיים
+
     @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL)
     private List<Report> reports = new ArrayList<>();
+
     private LocalDateTime startedAt;
 }

@@ -50,7 +50,7 @@ const FALLBACK_DATA: OverviewData = {
 };
 
 const AdminOverview = () => {
-  const [data, setData] = useState<OverviewData>(FALLBACK_DATA);
+  const [data, setData] = useState<OverviewData>(FALLBACK_DATA); 
   const [loading, setLoading] = useState(true);
 
   const manager = JSON.parse(localStorage.getItem('user') || '{}');
@@ -212,7 +212,6 @@ function buildOverviewFromExistingApis(missions: MissionApi[], agents: AgentApi[
   const allAgents = Array.isArray(agents) ? agents : [];
 
   const activeMissions = allMissions.filter((m) => m.status === 'IN_PROGRESS' || m.status === 'PENDING').length;
-
   const activeAgents = allAgents.filter((a) => a.status === 'ON_MISSION').length;
   const availableByStatus = allAgents.filter((a) => a.status === 'AVAILABLE').length;
   const availableAgents = availableByStatus > 0 ? availableByStatus : Math.max(allAgents.length - activeAgents, 0);

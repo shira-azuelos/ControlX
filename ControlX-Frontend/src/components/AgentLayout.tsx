@@ -10,7 +10,6 @@ const AgentLayout = ({
 }) => {
   const navigate = useNavigate();
 
-  // שליפת המשתמש המלא מה-localStorage כדי להציג את ה-ID
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const handleLogout = () => {

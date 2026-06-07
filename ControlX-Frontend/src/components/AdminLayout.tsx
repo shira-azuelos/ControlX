@@ -3,7 +3,7 @@ import { LayoutDashboard, Users, FileText, LogOut, Shield, MessageSquare, BellRi
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client'; // <--- הוספנו את זה!
+import SockJS from 'sockjs-client'; 
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -15,7 +15,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     if (!user || !user.id) return;
 
     const stompClient = new Client({
-      // כאן הקסם: אנחנו משתמשים ב-SockJS ובכתובת המקורית שלך!
       webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'),
       reconnectDelay: 5000,
       onConnect: () => {
@@ -130,7 +129,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-4 bg-emerald-950/30 px-5 py-1.5 rounded-full border border-emerald-900/50 hover:bg-emerald-900/20 transition-colors cursor-default">
             <div className="text-right">
               <div className="text-[9px] text-emerald-700 uppercase font-bold tracking-widest">
-                {user.department || 'COMMAND'} // DIRECTOR
+                {user.department || 'COMMAND'} 
               </div>
               <div className="text-xs text-emerald-400 font-black tracking-wider uppercase">
                 {user.name || 'UNKNOWN ADMIN'}

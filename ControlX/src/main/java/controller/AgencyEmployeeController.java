@@ -44,19 +44,17 @@ public class AgencyEmployeeController {
                 .orElseThrow(() -> new IllegalArgumentException("קוד הגישה (Passkey) שהוזן אינו קיים במערכת."));
     }
 
-    // 2. גיוס סוכן חכם
+    //  גיוס סוכן חכם
     @PostMapping("/recruit")
     public AgencyEmployee recruitAgent(@RequestBody FieldAgent agent, @RequestParam Long managerId) {
         return employeeService.recruitNewAgent(agent, managerId);
     }
 
-    // 3. שליפת סוכנים לפי מחלקה - מעודכן לטיפול חכם ב-Enum שגוי
+    //  שליפת סוכנים לפי מחלקה - מעודכן לטיפול ב-Enum שגוי
     @GetMapping("/department/{dept}")
     public List<FieldAgent> getAgentsByDepartment(@PathVariable String dept) {
         try {
-            // אם הטקסט ב-dept לא קיים ב-Enum, השורה הזו תזרוק שגיאה אוטומטית
             AgencyEmployee.Department department = AgencyEmployee.Department.valueOf(dept.toUpperCase());
-
             return employeeService.getAllEmployees().stream()
                     .filter(e -> e instanceof FieldAgent)
                     .map(e -> (FieldAgent) e)
@@ -64,25 +62,24 @@ public class AgencyEmployeeController {
                     .toList();
 
         } catch (IllegalArgumentException e) {
-            // אנחנו תופסים את השגיאה הטכנית ומעבירים אותה הלאה לגלובלי עם הסבר ברור בעברית
             throw new IllegalArgumentException("המחלקה המבוקשת '" + dept + "' אינה קיימת במערכת.");
         }
     }
 
-    // 4. מחיקת עובד
+    //  מחיקת עובד
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok().build();
     }
 
-    // 5. יצירת עובד רגיל
+    //  יצירת עובד רגיל
     @PostMapping
     public AgencyEmployee create(@RequestBody AgencyEmployee employee) {
         return employeeService.saveEmployee(employee);
     }
 
-    // 6. שליפת כל העובדים בארגון
+    //  שליפת כל העובדים בארגון
     @GetMapping
     public List<AgencyEmployee> getAll() {
         return employeeService.getAllEmployees();

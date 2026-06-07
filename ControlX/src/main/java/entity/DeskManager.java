@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Entity
-@DiscriminatorValue("MANAGER") // מזהה של מנהל
+@DiscriminatorValue("MANAGER")
 @Data
 @EqualsAndHashCode(callSuper = true)
 

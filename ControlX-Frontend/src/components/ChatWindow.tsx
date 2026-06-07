@@ -39,17 +39,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, selectedAge
 
     const fetchHistory = async () => {
       try {
-        if (selectedAgentId === null) {
+        if (selectedAgentId !== null) {
+            const response = await fetchWithAuth(`/chat/mission/${missionId}/between/${currentUser.id}/and/${selectedAgentId}`);
+            if (response.ok) {
+               const data = await response.json();
+               setMessages(data);
+               await markMessagesAsRead(missionId, selectedAgentId, currentUser.id);
+            }
+        } else {
             setMessages([]);
-            return;
-        }
-        const response = await fetchWithAuth(`/chat/mission/${missionId}/between/${currentUser.id}/and/${selectedAgentId}`);
-        if (response.ok) {
-           const data = await response.json();
-           setMessages(data);
-
-           // הוספנו: מסמנים את כל ההודעות כ"נקראו" ברגע שפתחנו את חלון הצ'אט!
-           await markMessagesAsRead(missionId, selectedAgentId, currentUser.id);
         }
       } catch (error) {
         console.error("Failed to load chat history", error);
@@ -57,16 +55,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, selectedAge
     };
 
     fetchHistory();
-
-    const socket = new SockJS('http://localhost:8080/ws-chat');
-    const client = Stomp.over(socket);
+    const client = Stomp.over(() => new SockJS('http://localhost:8080/ws-chat'));
+    client.reconnectDelay = 5000;
     client.debug = () => {}; 
 
     client.connect({}, () => {
       setIsConnected(true);
       const myTopic = selectedAgentId === null 
-         ? `/topic/messages/mission/${missionId}/broadcast` 
-         : `/topic/messages/mission/${missionId}/user/${currentUser.id}`;
+          ? `/topic/messages/mission/${missionId}/broadcast` 
+          : `/topic/messages/mission/${missionId}/user/${currentUser.id}`;
       
       client.subscribe(myTopic, (message) => {
         const receivedMessage = JSON.parse(message.body);
@@ -90,23 +87,25 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, selectedAge
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    const chatRequest = {
-      missionId: missionId,
-      senderId: currentUser.id,
-      recipientId: selectedAgentId,
-      text: newMessage,
-    };
+    const isBroadcast = selectedAgentId === null; 
+    const endpoint = isBroadcast ? '/chat/broadcast' : '/chat/send';
+    
+    const chatRequest = isBroadcast 
+        ? { missionId, senderId: currentUser.id, text: newMessage }
+        : { missionId, senderId: currentUser.id, recipientId: selectedAgentId, text: newMessage };
 
     try {
-      const response = await fetchWithAuth('/chat/send', {
+      const response = await fetchWithAuth(endpoint, {
         method: 'POST',
         body: JSON.stringify(chatRequest)
       });
 
       if (response.ok) {
-        const savedMsg = await response.json();
-        setMessages((prev) => [...prev, savedMsg]);
-        setNewMessage('');
+         if (!isBroadcast) {
+            const savedMsg = await response.json();
+            setMessages((prev) => [...prev, savedMsg]);
+         }
+         setNewMessage('');
       }
     } catch (error) {
       console.error("Failed to send message", error);

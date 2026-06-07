@@ -42,7 +42,6 @@ public class GeminiService {
 
         try {
             System.out.println("שולח בקשה למודל Qwen החכם בעברית...");
-
             Map response = restTemplate.postForObject(URL, request, Map.class);
 
             if (response != null && response.containsKey("choices")) {

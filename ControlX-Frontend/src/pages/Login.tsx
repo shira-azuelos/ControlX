@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Fingerprint, Lock, Shield, User, AlertCircle } from 'lucide-react';
+import { Fingerprint, Shield, User } from 'lucide-react';
 import { loginWithPasskey } from '../lib/api.ts';
 import MatrixRain from '../components/MatrixRain.tsx';
 

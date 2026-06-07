@@ -139,3 +139,10 @@ export const markMessagesAsRead = async (missionId: number, senderId: number, my
   if (!response.ok) throw new Error("Failed to mark messages as read");
   return response;
 };
+
+export const broadcastMessage = async (missionId: number, senderId: number, text: string) => {
+  const response = await fetchWithAuth('/chat/broadcast', {
+    method: 'POST',body: JSON.stringify({missionId,senderId,text})});
+  if (!response.ok) throw new Error("Failed to broadcast message");
+  return response.json();
+};

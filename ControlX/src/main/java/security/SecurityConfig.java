@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity //חוקי האבטחה לפי הכתוב בדף
+@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
@@ -31,17 +31,17 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//בכל בקשה יצטרכו לשלוח טוקן
+                //בכל בקשה יצטרכו לשלוח טוקן
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // הגדרת חוקי הגישה לנתיבים
                 .authorizeHttpRequests(auth -> auth
                         // דף הלוגין וחיבור ה-WebSocket פתוחים לחלוטין לכולם
-                        // התיקון כאן: שינינו ל- ws-chat כדי שיתאים לכתובת האמיתית!
                         .requestMatchers("/api/employees/login/**", "/ws-chat/**").permitAll()
                         // כל שאר הבקשות במערכת מחייבות טוקן תקף
                         .anyRequest().authenticated()
                 )
 
-                // 5. הוספת הפילטר של ה-JWT שלנו לפני הפילטר הרגיל של ספרינג
+                // הוספת ה JWT לפני הפילטר הרגיל של ספרינג כדי שלא יצטרך להכניס סיסמא
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -50,7 +50,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));//קבלת בקשות
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
         configuration.setAllowCredentials(true);//אפשר להעביר מידע מסווג בין השרת ללקוח

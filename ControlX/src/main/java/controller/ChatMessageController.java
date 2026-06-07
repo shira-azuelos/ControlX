@@ -8,7 +8,6 @@ import repository.MissionRepository;
 import repository.AgencyEmployeeRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-// יבוא של רכיב השידור בזמן אמת
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
@@ -21,10 +20,8 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     private final MissionRepository missionRepository;
     private final AgencyEmployeeRepository employeeRepository;
-    // הכלי שישמש אותנו לדחוף הודעות בזמן אמת לריאקט
     private final SimpMessagingTemplate messagingTemplate;
 
-    // קונסטרקטור מעודכן עם הזרקה של רכיב השידור
     public ChatMessageController(ChatMessageService chatMessageService,
                                  MissionRepository missionRepository,
                                  AgencyEmployeeRepository employeeRepository,
@@ -42,7 +39,7 @@ public class ChatMessageController {
         public String text;
     }
 
-    // 1. שליחת הודעה + שידור אוטומטי בזמן אמת!
+    //  שליחת הודעה + שידור אוטומטי בזמן אמת
     @PostMapping("/send")
     public ResponseEntity<?> sendMessage(@RequestBody MessageRequest request) {
         Mission mission = missionRepository.findById(request.missionId)
@@ -52,19 +49,33 @@ public class ChatMessageController {
         AgencyEmployee recipient = employeeRepository.findById(request.recipientId)
                 .orElseThrow(() -> new RuntimeException("Recipient not found"));
 
-        // א. שומרים את ההודעה בדאטה-בייס בשיטה הפרטית המעולה שלך
         ChatMessage savedMessage = chatMessageService.saveMessage(mission, sender, recipient, request.text);
-        // ב.  משדרים את ההודעה ישירות לערוץ של הנמען
+        // שידור לצאט האישי
         String destination = "/topic/messages/mission/" + request.missionId + "/user/" + request.recipientId;
         messagingTemplate.convertAndSend(destination, savedMessage);
 
-        // התוספת החדשה: משדרים גם לערוץ התראות גלובלי של הנמען!
+        // שידור להודעות הקופצות
         String globalDestination = "/topic/notifications/user/" + request.recipientId;
         messagingTemplate.convertAndSend(globalDestination, savedMessage);
         return ResponseEntity.ok(savedMessage);
     }
 
-    // 2. שליפת היסטוריית שיחה פרטית
+    // שידור הודעה לכל המשימה (Broadcast)
+    @PostMapping("/broadcast")
+    public ResponseEntity<?> broadcastMessage(@RequestBody MessageRequest request) {
+        Mission mission = missionRepository.findById(request.missionId)
+                .orElseThrow(() -> new RuntimeException("Mission not found"));
+        AgencyEmployee sender = employeeRepository.findById(request.senderId)
+                .orElseThrow(() -> new RuntimeException("Sender not found"));
+        ChatMessage savedMessage = chatMessageService.saveMessage(mission, sender, null, request.text);
+
+        String broadcastDestination = "/topic/messages/mission/" + request.missionId + "/broadcast";
+        messagingTemplate.convertAndSend(broadcastDestination, savedMessage);
+
+        return ResponseEntity.ok(savedMessage);
+    }
+
+    //  שליפת היסטוריית שיחה פרטית
     @GetMapping("/mission/{missionId}/between/{user1Id}/and/{user2Id}")
     public ResponseEntity<List<ChatMessage>> getPrivateChat(
             @PathVariable Long missionId,
@@ -75,7 +86,7 @@ public class ChatMessageController {
         return ResponseEntity.ok(messages);
     }
 
-    // 3. סימון הודעות כ"נקראו"
+    //  סימון הודעות כ"נקראו"
     @PostMapping("/mission/{missionId}/read")
     public ResponseEntity<?> markAsRead(
             @PathVariable Long missionId,
@@ -86,7 +97,7 @@ public class ChatMessageController {
         return ResponseEntity.ok().build();
     }
 
-    // 4. כמות הודעות שלא נקראו עבור התראות
+    //  כמות הודעות שלא נקראו עבור התראות
     @GetMapping("/mission/{missionId}/unread")
     public ResponseEntity<Long> getUnreadCount(
             @PathVariable Long missionId,
@@ -97,7 +108,7 @@ public class ChatMessageController {
         return ResponseEntity.ok(count);
     }
 
-    // 5. תצוגה מקדימה של הודעה אחרונה
+    //  תצוגה מקדימה של הודעה אחרונה
     @GetMapping("/mission/{missionId}/last")
     public ResponseEntity<ChatMessage> getLastMessage(@PathVariable Long missionId) {
         ChatMessage lastMessage = chatMessageService.getLastMessageByMission(missionId);

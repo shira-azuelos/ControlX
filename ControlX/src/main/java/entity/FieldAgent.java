@@ -9,7 +9,12 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class FieldAgent extends AgencyEmployee {
 
-    public enum AgentStatus { AVAILABLE, ON_MISSION, INJURED, ON_LEAVE }
+    public enum AgentStatus {
+        AVAILABLE,    //זמין
+        ON_MISSION,   //במשימה
+        INJURED,      //נפגע
+        ON_LEAVE      //סיים
+    }
 
     public enum Specialty {
         COMBAT,        // לחימה
@@ -35,7 +40,6 @@ public class FieldAgent extends AgencyEmployee {
     @Enumerated(EnumType.STRING)
     private Specialty specialty;
 
-    // ---> השורה שהייתה חסרה לך והפילה את ה-Service! <---
     @ManyToOne
     @JoinColumn(name = "recruiting_manager_id")
     private DeskManager recruitingManager;

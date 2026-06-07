@@ -38,15 +38,10 @@ const AgentDashboard = () => {
   const handleSendReport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReport.trim() || !activeMission) return;
-
-    // ==========================================
-    // התיקון: החלפנו את ה-alert בהתראות טקטיות
-    // ==========================================
     try {
       await submitReport(activeMission.id, user.id, newReport);
       setNewReport('');
       
-      // התראת הצלחה ירוקה ומעוצבת
       toast.success('REPORT TRANSMITTED SUCCESSFULLY', {
         style: { 
           background: '#02120e', 
@@ -60,7 +55,6 @@ const AgentDashboard = () => {
       });
 
     } catch (err) {
-      // התראת שגיאה אדומה
       toast.error('COMMS FAILURE: REPORT NOT TRANSMITTED', {
         style: { 
           background: '#2a0808', 
@@ -73,7 +67,6 @@ const AgentDashboard = () => {
         iconTheme: { primary: '#ef4444', secondary: '#2a0808' }
       });
     }
-    // ==========================================
   };
 
   return (

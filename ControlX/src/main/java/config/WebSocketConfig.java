@@ -12,16 +12,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // הכתובת (Endpoint) שהריאקט יפנה אליה בעתיד כדי להתחבר לצינור
+        // יצירת צינור תקשורת
         registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("*") // מאפשר לריאקט להתחבר מכל פורט
+                .setAllowedOriginPatterns("*")
                 .withSockJS(); // רשת ביטחון למניעת ניתוקים
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // פותח "ערוצי רדיו" (Topics) שהלקוחות יוכלו להאזין להם
+        // מהשרת ללקוח
         registry.enableSimpleBroker("/topic");
+        //מהחקוח לשרת
         registry.setApplicationDestinationPrefixes("/app");
     }
 }

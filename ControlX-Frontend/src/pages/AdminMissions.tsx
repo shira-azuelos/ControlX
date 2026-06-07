@@ -1,30 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import {
-  Radio,
-  Plus,
-  Users,
-  MessageSquare,
-  Cpu,
-  FileText,
-  Globe,
-  Maximize2,
-  X,
-  Timer,
-  CheckCircle,
-  Trash2,
-  Activity,
-  AlertOctagon
-} from 'lucide-react';
-import {
-  getMissionsByManager,
-  createMission,
-  getAgentsByDept,
-  summarizeMissionAI,
-  completeMission,
-  deleteMission,
-} from '../lib/api';
+import {Radio,Plus,Users,MessageSquare,Cpu,FileText,Globe,Maximize2,X,Timer,CheckCircle,Trash2,Activity,AlertOctagon} from 'lucide-react';
+import { getMissionsByManager,createMission,getAgentsByDept,summarizeMissionAI,completeMission,deleteMission,} from '../lib/api';
 
 type MissionsView = 'ACTIVE' | 'INACTIVE';
 
@@ -95,12 +73,17 @@ const sortByDateDesc = (arr: Report[]) =>
     );
 
 const formatTime = (seconds: number) => {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s
-    .toString()
-    .padStart(2, '0')}`;
+  const d = Math.floor(seconds / (3600 * 24)); 
+  const h = Math.floor((seconds % (3600 * 24)) / 3600); 
+  const m = Math.floor((seconds % 3600) / 60); 
+  const s = seconds % 60; 
+  const formattedH = h.toString().padStart(2, '0');
+  const formattedM = m.toString().padStart(2, '0');
+  const formattedS = s.toString().padStart(2, '0');
+  if (d > 0) {
+    return `${d}d ${formattedH}:${formattedM}:${formattedS}`;
+  }  
+  return `${formattedH}:${formattedM}:${formattedS}`;
 };
 
 const AdminMissions = () => {
@@ -110,16 +93,16 @@ const AdminMissions = () => {
   const managerId = manager.id;
 
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [availableAgents, setAvailableAgents] = useState<Agent[]>([]);
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [availableAgents, setAvailableAgents] = useState<Agent[]>([]);  //הסוכנים הפנויים
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null); //לראות את פרטי המשימה
+  const [showCreateModal, setShowCreateModal] = useState(false);  //יצירת משימה
   const [loading, setLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDescModal, setShowDescModal] = useState(false);
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [showReportsModal, setShowReportsModal] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false); 
+  const [isDeleting, setIsDeleting] = useState(false); //מחיקת משימה
+  const [showDescModal, setShowDescModal] = useState(false); //תיאור המשימה
+  const [showAiModal, setShowAiModal] = useState(false); // חלון סיכום AI
+  const [showReportsModal, setShowReportsModal] = useState(false); //חלון כל הדיווחים
+  const [elapsedTime, setElapsedTime] = useState(0); //הזמן שעבר מתחילת המשימה
   const [missionsView, setMissionsView] = useState<MissionsView>('ACTIVE');
   
   const [showCompleteConfirm, setShowCompleteConfirm] = useState<number | null>(null);
@@ -456,7 +439,7 @@ const AdminMissions = () => {
                       onClick={() => navigate(`/admin/comms?missionId=${selectedMission.id}`, { state: { fromMission: selectedMission } })}
                       className="bg-cyan-600 text-black px-3 py-2 text-xs font-black uppercase flex items-center gap-2 hover:bg-cyan-400"
                     >
-                      <MessageSquare size={14} /> Open Comms
+                      <MessageSquare size={14} /> Open Chat
                     </button>
                   </div>
                 </div>

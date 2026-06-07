@@ -34,7 +34,6 @@ public class AgencyEmployee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     private String fullName;
 
     @Enumerated(EnumType.STRING)

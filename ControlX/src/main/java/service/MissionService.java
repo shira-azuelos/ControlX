@@ -26,17 +26,14 @@ public class MissionService {
 
     @Transactional
     public Mission saveMission(Mission mission) {
-        // המשימה הופכת לפעילה
         mission.setStatus(Mission.MissionStatus.IN_PROGRESS);
-
-        // ---> התיקון שלנו: חותמת זמן התחלה מדויקת <---
         mission.setStartedAt(LocalDateTime.now());
 
         if (mission.getCreatorManager() != null && mission.getCreatorManager().getId() != null) {
             DeskManager realManager = (DeskManager) employeeRepository.findById(mission.getCreatorManager().getId()).orElse(null);
             mission.setCreatorManager(realManager);
         }
-
+        //שליפת כל הסוכנים של המשימה
         if (mission.getAssignedAgents() != null && !mission.getAssignedAgents().isEmpty()) {
             List<FieldAgent> managedAgents = mission.getAssignedAgents().stream()
                     .map(a -> (FieldAgent) employeeRepository.findById(a.getId()).orElse(null))
@@ -48,9 +45,8 @@ public class MissionService {
                 agent.setStatus(FieldAgent.AgentStatus.ON_MISSION);
             }
 
-            // שמירת הסוכנים במסד הנתונים
             employeeRepository.saveAll(managedAgents);
-
+             //חיבור הסוכנים למשימה
             mission.setAssignedAgents(managedAgents);
         }
         return missionRepository.save(mission);
@@ -89,6 +85,7 @@ public class MissionService {
     public Mission generateAiSummary(Long missionId) {
         Mission mission = missionRepository.findById(missionId).orElseThrow();
         List<Report> allReports = reportRepository.findByMissionId(missionId);
+        //הופכים את כל הדיוחים לטקסט אחד ארוך
         String combined = allReports.stream().map(Report::getRawText).collect(Collectors.joining("\n"));
         if (!combined.isEmpty()) {
             try {

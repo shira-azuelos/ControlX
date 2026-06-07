@@ -28,10 +28,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-
-        // ==========================================
-        // התיקון: מעקף עבור בקשות ה-WebSocket - כדי שה-SockJS יוכל להתחבר בחופשיות
-        // ==========================================
         String path = request.getRequestURI();
         if (path.startsWith("/ws-chat")) {
             filterChain.doFilter(request, response);
@@ -42,7 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final Long employeeId;
 
-        // אם אין Header של Authorization או שהוא לא מתחיל ב-Bearer, ממשיכים הלאה בלי לאמת
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -58,14 +53,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtService.isTokenValid(jwt)) {
                     String role = jwtService.extractRole(jwt); // חילוץ התפקיד
 
-                    // יוצרים אובייקט אימות עבור Spring Security
+                    // יוצרים אובייקט אימות
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             employeeId,
                             null,
                             Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                     );
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));//מעתיקים לתעודה עוד פרטים מהבקשה
+                    //מעתיקים לאוביקט עוד פרטים מהבקשה
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     // מעדכנים את מערכת האבטחה שהמשתמש מורשה לפעולה הזו
                     SecurityContextHolder.getContext().setAuthentication(authToken);

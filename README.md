@@ -23,7 +23,7 @@ The project is organized as two separate packages in the repo:
 - Java 22, Spring Boot 3.4.1 (Web, Data JPA, Validation, Security, WebSocket)
 - Hibernate / Spring Data JPA over an H2 database (swappable for PostgreSQL/Oracle)
 - JWT authentication (`io.jsonwebtoken`)
-- Integration with an external AI service (`GeminiService`) for generating briefs
+- Integration with an external AI service for generating briefs
 - Classic layered structure: controller → service → repository → entity, with a central `GlobalExceptionHandler` for error handling
 
 ### Frontend (ControlX-Frontend)
